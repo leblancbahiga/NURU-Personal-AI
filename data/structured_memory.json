@@ -1,0 +1,37 @@
+{
+  "nom": {
+    "value": "Leblanc BAHIGA Mudarhi",
+    "confidence": 0.95,
+    "timestamp": 1778327068.98988,
+    "updated": "2026-05-09 14:44:28",
+    "status": "active"
+  },
+  "prenom": {
+    "value": "Leblanc",
+    "confidence": 0.95,
+    "timestamp": 1778327068.9901319,
+    "updated": "2026-05-09 14:44:28",
+    "status": "active"
+  },
+  "profession": {
+    "value": "Ingénieur agronome & informaticien",
+    "confidence": 0.95,
+    "timestamp": 1778327068.990301,
+    "updated": "2026-05-09 14:44:28",
+    "status": "active"
+  },
+  "lieu": {
+    "value": "RDC (Kinshasa)",
+    "confidence": 0.95,
+    "timestamp": 1778327068.990433,
+    "updated": "2026-05-09 14:44:28",
+    "status": "active"
+  },
+  "projet": {
+    "value": "NURU — assistant IA personnel",
+    "confidence": 0.95,
+    "timestamp": 1778327068.9905741,
+    "updated": "2026-05-09 14:44:28",
+    "status": "active"
+  }
+}
