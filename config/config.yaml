@@ -1,0 +1,98 @@
+# ============================================================================
+# Configuration centralisée — Assistant NURU
+# ============================================================================
+
+# --- Modèles ---
+models:
+  local:
+    # Modèle LLM local (MLX 4-bit pour Apple Silicon)
+    llm:
+      repo_id: "mlx-community/Qwen2.5-3B-Instruct-4bit"
+      # Alternatives (téléchargement nécessaire) :
+      # - "mlx-community/Qwen2.5-1.5B-Instruct-4bit"
+      # - "mlx-community/Qwen2.5-0.5B-Instruct-4bit"
+
+    # Embedding pour le RAG
+    embedding:
+      model_name: "sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2"
+
+    # Re-ranker
+    reranker:
+      model_name: "cross-encoder/ms-marco-MiniLM-L6-v2"
+
+  cloud:
+    provider: "deepseek"  # "deepseek" | "openrouter"
+    deepseek_model: "deepseek-chat"
+    openrouter_model: "google/gemma-4-31b-it:free"  # Modèle gratuit via OpenRouter
+
+# --- Moteurs de Recherche Web ---
+search:
+  primary: "tavily"       # "tavily" | "brave"
+  backup: "brave"         # Moteur de secours si le primaire échoue
+  tavily:
+    depth: "basic"        # "basic" (rapide) | "advanced" (complet)
+    max_results: 5
+    include_answer: true   # Inclure le résumé Tavily
+  brave:
+    max_results: 5
+    country: "fr"
+    language: "fr"
+
+# --- Audio ---
+audio:
+  stt_model: "tiny"  # tiny | base (faster-whisper)
+  tts_speed: 200     # mots/min (vitesse de la commande `say` macOS)
+  shortcut: "cmd+space"
+
+# --- RAG ---
+rag:
+  chunk_size: 512
+  chunk_overlap: 64
+  similarity_threshold: 0.50               # Seuil de similarité cosinus (0-1)
+  chroma_db_path: "data/chroma_db"
+  reranker: false                          # 🔧 Re-ranker (Cross-Encoder) — désactivé par défaut (gain ~45s)
+  hyde: false                              # 🔧 HyDE (Hypothetical Document Embeddings) — désactivé par défaut (gain ~15s)
+  max_context_tokens: 1500               # Tokens max de contexte RAG injecté dans le prompt
+
+  # Fenêtre de contexte dynamique selon la complexité
+  dynamic_context:
+    enabled: true
+    simple:
+      max_tokens: 256
+      rag_chunks: 0
+      memory_tokens: 100
+    medium:
+      max_tokens: 1024
+      rag_chunks: 3
+      memory_tokens: 300
+    complex:
+      max_tokens: 2048
+      rag_chunks: 5
+      memory_tokens: 500
+
+  # Dossiers à surveiller pour l'indexation automatique
+  watch_dirs:
+    - "~/Documents"
+    - "~/Google Drive"
+
+  # Extensions supportées
+  extensions:
+    - ".pdf"
+    - ".docx"
+    - ".txt"
+    - ".md"
+    - ".csv"
+
+# --- Mémoire ---
+memory:
+  session_buffer_size: 5   # Nombre d'échanges conservés en RAM
+  auto_summarize: true
+
+# --- Système ---
+system:
+  max_ram_gb: 3.0            # Pic d'utilisation RAM maximum
+  low_battery_threshold: 20  # % batterie pour suspendre l'indexation
+  low_ram_threshold_gb: 1.5  # RAM minimale pour l'indexation
+  log_level: "INFO"
+  log_dir: "data/logs"
+  keychain_service: "com.nuru.assistant"

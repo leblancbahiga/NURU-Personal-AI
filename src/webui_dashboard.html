@@ -1,0 +1,1392 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>NURU — Dashboard Cyberpunk</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=JetBrains+Mono:wght@300;400;700&display=swap');
+
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+body {
+  background: #05050a;
+  color: #c8dce8;
+  font-family: 'JetBrains Mono', monospace;
+  min-height: 100vh;
+  overflow-x: hidden;
+  background-image:
+    radial-gradient(ellipse at 20% 50%, rgba(0, 220, 180, 0.04) 0%, transparent 60%),
+    radial-gradient(ellipse at 80% 50%, rgba(0, 160, 255, 0.04) 0%, transparent 60%),
+    radial-gradient(ellipse at 50% 0%, rgba(120, 60, 240, 0.03) 0%, transparent 50%);
+}
+
+/* ── Grille 3 colonnes + console ── */
+.grid {
+  display: grid;
+  grid-template-columns: 320px 1fr 320px;
+  grid-template-rows: 1fr 180px 52px;
+  gap: 10px;
+  padding: 12px;
+  height: 100vh;
+  max-height: 100vh;
+}
+
+/* ── Verre translucide cyberpunk ── */
+.panel {
+  background: rgba(8, 12, 30, 0.72);
+  backdrop-filter: blur(24px);
+  -webkit-backdrop-filter: blur(24px);
+  border: 1px solid rgba(0, 180, 255, 0.06);
+  border-radius: 14px;
+  padding: 16px;
+  position: relative;
+  overflow: hidden;
+  box-shadow: 0 0 50px rgba(0, 80, 180, 0.02), inset 0 0 80px rgba(0, 60, 120, 0.02);
+}
+
+.panel::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(0, 200, 255, 0.15), transparent);
+}
+
+.panel-title {
+  font-family: 'Orbitron', sans-serif;
+  font-size: 8px;
+  letter-spacing: 3px;
+  text-transform: uppercase;
+  color: rgba(0, 180, 255, 0.25);
+  margin-bottom: 14px;
+  position: relative;
+}
+
+/* ── PANEL GAUCHE : Télémétrie / MLX ── */
+.left-panel { grid-column: 1; grid-row: 1; }
+
+.gauge-container {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  margin-top: 4px;
+}
+
+.gauge-item {
+  background: rgba(0, 30, 70, 0.12);
+  border-radius: 10px;
+  padding: 12px 14px;
+  border: 1px solid rgba(0, 180, 255, 0.04);
+}
+
+.gauge-header {
+  display: flex;
+  justify-content: space-between;
+  font-size: 9px;
+  color: rgba(0, 180, 255, 0.45);
+  margin-bottom: 7px;
+  letter-spacing: 1px;
+}
+
+.gauge-bar {
+  height: 4px;
+  background: rgba(0, 180, 255, 0.05);
+  border-radius: 2px;
+  position: relative;
+  overflow: hidden;
+}
+
+.gauge-fill {
+  height: 100%;
+  border-radius: 2px;
+  transition: width 0.8s cubic-bezier(0.4, 0, 0.2, 1);
+  position: relative;
+}
+
+.gauge-fill::after {
+  content: '';
+  position: absolute;
+  right: 0; top: -2px; bottom: -2px;
+  width: 8px;
+  background: inherit;
+  filter: blur(5px);
+  border-radius: 50%;
+}
+
+.gauge-ram { background: linear-gradient(90deg, #00d4aa, #00b4ff); }
+.gauge-latency { background: linear-gradient(90deg, #7c3aed, #00d4aa); }
+.gauge-tokens { background: linear-gradient(90deg, #00b4ff, #06b6d4); }
+.gauge-cache { background: linear-gradient(90deg, #f59e0b, #00d4aa); }
+
+.gauge-critical {
+  position: absolute; top: -2px; bottom: -2px;
+  width: 2px; background: #ff4444;
+  left: 37.5%;
+  box-shadow: 0 0 6px #ff4444;
+}
+
+.gauge-ram-total {
+  position: absolute; top: -2px; bottom: -2px;
+  width: 1px; background: rgba(255,255,255,0.1);
+  left: 100%;
+}
+
+.gauge-value {
+  font-size: 17px;
+  font-weight: 700;
+  color: #dceeff;
+  margin-top: 5px;
+}
+
+.gauge-value span {
+  font-size: 10px;
+  font-weight: 400;
+  color: rgba(0, 180, 255, 0.35);
+}
+
+.mlx-chips {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+  margin-top: 6px;
+}
+
+.mlx-chip {
+  font-size: 8px;
+  padding: 3px 8px;
+  border-radius: 4px;
+  border: 1px solid rgba(0, 180, 255, 0.08);
+  background: rgba(0, 180, 255, 0.02);
+  color: rgba(0, 180, 255, 0.4);
+  letter-spacing: 1px;
+}
+
+.mlx-chip.active {
+  border-color: rgba(0, 212, 170, 0.25);
+  background: rgba(0, 212, 170, 0.05);
+  color: #00d4aa;
+}
+
+.cache-stats {
+  display: flex;
+  gap: 10px;
+  margin-top: 8px;
+}
+
+.cache-stat {
+  flex: 1;
+  background: rgba(0, 30, 70, 0.1);
+  border-radius: 8px;
+  padding: 8px;
+  text-align: center;
+  border: 1px solid rgba(0, 180, 255, 0.03);
+}
+
+.cache-stat .num {
+  font-size: 18px;
+  font-weight: 700;
+  color: #e0f0ff;
+}
+
+.cache-stat .label {
+  font-size: 8px;
+  color: rgba(0, 180, 255, 0.3);
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  margin-top: 2px;
+}
+
+/* ── PANEL CENTRAL : Cœur NURU ── */
+.center-panel {
+  grid-column: 2; grid-row: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  gap: 12px;
+}
+
+.ring-container {
+  position: relative;
+  width: 240px;
+  height: 240px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.ring {
+  position: absolute;
+  border-radius: 50%;
+  border: 1.5px solid rgba(0, 180, 255, 0.06);
+  animation: ringPulse 4s ease-in-out infinite;
+}
+
+.ring:nth-child(1) {
+  border-color: rgba(0, 180, 255, 0.12);
+  width: 100%;
+  height: 100%;
+}
+
+.ring:nth-child(2) {
+  border-color: rgba(0, 212, 170, 0.08);
+  width: 80%;
+  height: 80%;
+  animation-delay: 1.2s;
+}
+
+.ring:nth-child(3) {
+  border-color: rgba(124, 58, 237, 0.07);
+  width: 60%;
+  height: 60%;
+  animation-delay: 2.4s;
+}
+
+.ring.state-listen { border-color: #ff3366 !important; box-shadow: 0 0 50px rgba(255, 51, 102, 0.12); }
+.ring.state-think  { border-color: #3366ff !important; box-shadow: 0 0 50px rgba(51, 102, 255, 0.12); }
+.ring.state-speak  { border-color: #00d4aa !important; box-shadow: 0 0 50px rgba(0, 212, 170, 0.12); }
+
+@keyframes ringPulse {
+  0%, 100% { opacity: 0.3; transform: scale(1); }
+  50% { opacity: 1; transform: scale(1.03); }
+}
+
+.center-logo {
+  position: relative;
+  z-index: 2;
+  text-align: center;
+}
+
+.center-logo h1 {
+  font-family: 'Orbitron', sans-serif;
+  font-size: 30px;
+  font-weight: 900;
+  background: linear-gradient(135deg, #00d4aa, #00b4ff, #7c3aed);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  letter-spacing: 10px;
+  text-shadow: 0 0 80px rgba(0, 180, 255, 0.25);
+}
+
+.center-logo .sub {
+  font-size: 9px;
+  color: rgba(0, 180, 255, 0.18);
+  letter-spacing: 5px;
+  margin-top: 4px;
+  text-transform: uppercase;
+}
+
+.state-indicator {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  margin-top: 14px;
+  font-size: 10px;
+  letter-spacing: 3px;
+  color: rgba(0, 180, 255, 0.25);
+  text-transform: uppercase;
+}
+
+.state-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: rgba(0, 180, 255, 0.1);
+  transition: all 0.3s;
+}
+
+.state-dot.idle   { background: rgba(100, 100, 100, 0.25); }
+.state-dot.listen { background: #ff3366; box-shadow: 0 0 14px #ff3366; }
+.state-dot.think  { background: #3366ff; box-shadow: 0 0 14px #3366ff; }
+.state-dot.speak  { background: #00d4aa; box-shadow: 0 0 14px #00d4aa; }
+
+/* ── Zone streaming text (typewriter) ── */
+.stream-zone {
+  width: 100%;
+  max-width: 460px;
+  min-height: 60px;
+  background: rgba(0, 20, 50, 0.2);
+  border-radius: 10px;
+  padding: 12px 16px;
+  border: 1px solid rgba(0, 180, 255, 0.04);
+  position: relative;
+}
+
+.stream-text {
+  font-size: 12px;
+  line-height: 1.7;
+  color: rgba(200, 220, 240, 0.7);
+  word-wrap: break-word;
+  white-space: pre-wrap;
+  min-height: 28px;
+}
+
+.cursor-blink {
+  display: inline-block;
+  width: 2px;
+  height: 15px;
+  background: #00d4aa;
+  margin-left: 2px;
+  vertical-align: text-bottom;
+  animation: blink 0.8s step-end infinite;
+}
+
+@keyframes blink {
+  50% { opacity: 0; }
+}
+
+/* ── PANEL DROIT : RAG Canvas ── */
+.right-panel { grid-column: 3; grid-row: 1; }
+
+.rag-visual {
+  position: relative;
+  width: 100%;
+  height: calc(100% - 28px);
+}
+
+.rag-canvas {
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+
+/* ── Routing paths ── */
+.routing-section {
+  margin-top: 8px;
+}
+
+.routing-paths {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.route-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 8px;
+  letter-spacing: 1px;
+  color: rgba(0, 180, 255, 0.25);
+  padding: 5px 10px;
+  border-radius: 6px;
+  background: rgba(0, 180, 255, 0.015);
+  transition: all 0.3s;
+}
+
+.route-item.active {
+  color: #00d4aa;
+  background: rgba(0, 212, 170, 0.04);
+  border: 1px solid rgba(0, 212, 170, 0.08);
+}
+
+.route-dot {
+  width: 4px; height: 4px;
+  border-radius: 50%;
+  background: currentColor;
+  flex-shrink: 0;
+}
+
+.route-label {
+  flex-shrink: 0;
+}
+
+.route-line {
+  flex: 1;
+  height: 1px;
+  background: linear-gradient(90deg, currentColor, transparent);
+  opacity: 0.15;
+}
+
+.route-item.active .route-line {
+  background: linear-gradient(90deg, #00d4aa, #00b4ff);
+  opacity: 0.5;
+}
+
+.route-lock {
+  font-size: 9px;
+  flex-shrink: 0;
+}
+
+/* ── Faits structurés en pastilles ── */
+.facts-section {
+  margin-top: 10px;
+}
+
+.facts-title {
+  font-size: 8px;
+  letter-spacing: 2px;
+  color: rgba(0, 180, 255, 0.2);
+  text-transform: uppercase;
+  margin-bottom: 6px;
+}
+
+.facts-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+}
+
+.fact-pill {
+  font-size: 7px;
+  padding: 3px 8px;
+  border-radius: 20px;
+  border: 1px solid rgba(0, 180, 255, 0.06);
+  background: rgba(0, 180, 255, 0.02);
+  color: rgba(200, 220, 240, 0.45);
+  letter-spacing: 0.5px;
+  white-space: nowrap;
+  max-width: 140px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  transition: all 0.2s;
+}
+
+.fact-pill:hover {
+  border-color: rgba(0, 212, 170, 0.15);
+  color: rgba(0, 212, 170, 0.7);
+  background: rgba(0, 212, 170, 0.04);
+}
+
+.fact-pill.local  { border-color: rgba(0, 180, 255, 0.1); }
+.fact-pill.rag    { border-color: rgba(0, 212, 170, 0.1); color: rgba(0, 212, 170, 0.5); }
+.fact-pill.cloud  { border-color: rgba(255, 170, 0, 0.1); color: rgba(255, 170, 0, 0.4); }
+
+/* ── CONSOLE (pleine largeur) ── */
+.console-panel { grid-column: 1 / -1; grid-row: 2; }
+
+.console-output {
+  font-size: 10px;
+  line-height: 1.7;
+  color: rgba(0, 180, 255, 0.35);
+  height: calc(100% - 26px);
+  overflow-y: auto;
+  font-family: 'JetBrains Mono', monospace;
+  scroll-behavior: smooth;
+}
+
+.console-output::-webkit-scrollbar { width: 0; }
+
+.log-line {
+  opacity: 0;
+  animation: logFade 0.25s ease forwards;
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+@keyframes logFade {
+  to { opacity: 1; }
+}
+
+.log-line .time {
+  color: rgba(0, 180, 255, 0.12);
+  margin-right: 10px;
+  font-size: 9px;
+}
+
+.log-line .tag {
+  font-weight: 700;
+  margin-right: 8px;
+  letter-spacing: 0.5px;
+}
+
+.log-line .tag-RAG      { color: #00d4aa; }
+.log-line .tag-ROUTER   { color: #7c3aed; }
+.log-line .tag-CACHE    { color: #f59e0b; }
+.log-line .tag-PERF     { color: #06b6d4; }
+.log-line .tag-STT      { color: #ff3366; }
+.log-line .tag-TTS      { color: #00b4ff; }
+.log-line .tag-CLOUD    { color: #ffaa00; }
+.log-line .tag-CORRECT  { color: #ff6b35; }
+.log-line .tag-CHAT     { color: #00d4aa; }
+.log-line .tag-SYSTEM   { color: rgba(0, 180, 255, 0.25); }
+
+/* ── CHAT INPUT ── */
+.chat-panel {
+  grid-column: 1 / -1;
+  grid-row: 3;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 14px;
+}
+
+.chat-panel .panel-title {
+  margin-bottom: 0;
+  white-space: nowrap;
+  margin-right: 8px;
+}
+
+.chat-input-wrapper {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background: rgba(0, 20, 50, 0.2);
+  border-radius: 8px;
+  border: 1px solid rgba(0, 180, 255, 0.04);
+  transition: border-color 0.3s;
+}
+
+.chat-input-wrapper:focus-within {
+  border-color: rgba(0, 200, 255, 0.15);
+}
+
+.chat-input-wrapper input {
+  flex: 1;
+  background: transparent;
+  border: none;
+  outline: none;
+  color: rgba(200, 220, 240, 0.7);
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 12px;
+  padding: 8px 12px;
+}
+
+.chat-input-wrapper input::placeholder {
+  color: rgba(0, 180, 255, 0.2);
+  letter-spacing: 0.5px;
+  font-size: 11px;
+}
+
+.chat-send-btn {
+  background: transparent;
+  border: 1px solid rgba(0, 200, 255, 0.08);
+  color: rgba(0, 212, 170, 0.5);
+  font-size: 16px;
+  padding: 6px 14px;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.25s;
+  font-family: 'JetBrains Mono', monospace;
+  line-height: 1;
+}
+
+.chat-send-btn:hover {
+  background: rgba(0, 212, 170, 0.06);
+  border-color: rgba(0, 212, 170, 0.2);
+  color: #00d4aa;
+}
+
+.chat-send-btn:active {
+  transform: scale(0.95);
+}
+
+.chat-cloud-btn {
+  background: transparent;
+  border: 1px solid rgba(0, 200, 255, 0.08);
+  color: rgba(0, 180, 255, 0.3);
+  width: 36px;
+  height: 36px;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 14px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s;
+  flex-shrink: 0;
+}
+.chat-cloud-btn:hover {
+  background: rgba(0, 180, 255, 0.06);
+  border-color: rgba(0, 180, 255, 0.2);
+  color: rgba(0, 180, 255, 0.8);
+}
+.chat-cloud-btn.active {
+  border-color: rgba(0, 180, 255, 0.3);
+  background: rgba(0, 180, 255, 0.08);
+  box-shadow: 0 0 8px rgba(0, 180, 255, 0.1);
+}
+
+.chat-web-btn {
+  background: transparent;
+  border: 1px solid rgba(255, 170, 0, 0.08);
+  color: rgba(255, 170, 0, 0.3);
+  width: 36px;
+  height: 36px;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 14px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s;
+  flex-shrink: 0;
+}
+.chat-web-btn:hover {
+  background: rgba(255, 170, 0, 0.06);
+  border-color: rgba(255, 170, 0, 0.2);
+  color: rgba(255, 170, 0, 0.8);
+}
+.chat-web-btn.active {
+  border-color: rgba(255, 170, 0, 0.3);
+  background: rgba(255, 170, 0, 0.08);
+  box-shadow: 0 0 8px rgba(255, 170, 0, 0.1);
+}
+
+/* ── Particles de fond ── */
+#particles-canvas {
+  position: fixed;
+  top: 0; left: 0;
+  width: 100%; height: 100%;
+  pointer-events: none;
+  z-index: -1;
+  opacity: 0.25;
+}
+
+/* ── Responsive ── */
+@media (max-width: 1000px) {
+  .grid {
+    grid-template-columns: 1fr;
+    grid-template-rows: auto 340px auto 160px 48px;
+    height: auto;
+  }
+  .left-panel   { grid-column: 1; grid-row: 1; }
+  .center-panel { grid-column: 1; grid-row: 2; }
+  .right-panel  { grid-column: 1; grid-row: 3; }
+  .console-panel{ grid-column: 1; grid-row: 4; }
+  .chat-panel   { grid-column: 1; grid-row: 5; }
+}
+</style>
+</head>
+<body>
+
+<canvas id="particles-canvas"></canvas>
+
+<div class="grid">
+
+  <!-- ─── GAUCHE : Télémétrie / MLX ─── -->
+  <div class="panel left-panel">
+    <div class="panel-title">⟐ TÉLÉMÉTRIE / MLX</div>
+    <div class="gauge-container">
+      <!-- RAM -->
+      <div class="gauge-item">
+        <div class="gauge-header">
+          <span>MÉMOIRE UNIFIÉE</span>
+          <span id="ram-percent">—</span>
+        </div>
+        <div class="gauge-bar">
+          <div class="gauge-fill gauge-ram" id="ram-fill" style="width:0%"></div>
+          <div class="gauge-critical" title="Seuil critique 3 Go"></div>
+          <div class="gauge-ram-total" title="8 Go total"></div>
+        </div>
+        <div class="gauge-value" id="ram-value">— <span>/ 8.0 Go</span></div>
+      </div>
+
+      <!-- Latence MLX -->
+      <div class="gauge-item">
+        <div class="gauge-header">
+          <span>LATENCE MLX</span>
+          <span id="latency-label">—</span>
+        </div>
+        <div class="gauge-bar">
+          <div class="gauge-fill gauge-latency" id="latency-fill" style="width:0%"></div>
+        </div>
+        <div class="gauge-value" id="latency-value">— <span>ms</span></div>
+      </div>
+
+      <!-- Tokens/s -->
+      <div class="gauge-item">
+        <div class="gauge-header">
+          <span>DÉBIT INFÉRENCE</span>
+          <span id="tokens-label">—</span>
+        </div>
+        <div class="gauge-bar">
+          <div class="gauge-fill gauge-tokens" id="tokens-fill" style="width:0%"></div>
+        </div>
+        <div class="gauge-value" id="tokens-value">— <span>tok/s</span></div>
+      </div>
+
+      <!-- Cache hits -->
+      <div class="gauge-item">
+        <div class="gauge-header">
+          <span>CACHE SÉMANTIQUE</span>
+          <span id="cache-label">—</span>
+        </div>
+        <div class="gauge-bar">
+          <div class="gauge-fill gauge-cache" id="cache-fill" style="width:0%"></div>
+        </div>
+        <div class="gauge-value" id="cache-value">— <span>% hits</span></div>
+      </div>
+
+      <!-- MLX Chips -->
+      <div class="mlx-chips" id="mlx-chips">
+        <span class="mlx-chip active">MLX</span>
+        <span class="mlx-chip active">Apple Silicon</span>
+        <span class="mlx-chip">RAG</span>
+        <span class="mlx-chip">STT</span>
+      </div>
+
+      <!-- Cache stats numériques -->
+      <div class="cache-stats">
+        <div class="cache-stat">
+          <div class="num" id="cache-hits">0</div>
+          <div class="label">HITS</div>
+        </div>
+        <div class="cache-stat">
+          <div class="num" id="cache-misses">0</div>
+          <div class="label">MISSES</div>
+        </div>
+        <div class="cache-stat">
+          <div class="num" id="cache-size">0</div>
+          <div class="label">ENTRIES</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ─── CENTRE : Cœur NURU ─── -->
+  <div class="panel center-panel">
+    <div class="ring-container">
+      <div class="ring" id="ring1"></div>
+      <div class="ring" id="ring2"></div>
+      <div class="ring" id="ring3"></div>
+      <div class="center-logo">
+        <h1>NURU</h1>
+        <div class="sub">Assistant IA • Apple Silicon</div>
+        <div class="state-indicator">
+          <span class="state-dot idle" id="state-dot"></span>
+          <span id="state-text">REPOS</span>
+        </div>
+      </div>
+    </div>
+    <!-- Zone streaming typewriter -->
+    <div class="stream-zone">
+      <div class="stream-text" id="stream-text"><span class="cursor-blink"></span></div>
+    </div>
+  </div>
+
+  <!-- ─── DROITE : RAG Canvas + Routage + Faits ─── -->
+  <div class="panel right-panel">
+    <div class="panel-title">⟐ MATRICE RAG / ROUTAGE</div>
+    <div class="rag-visual">
+      <canvas id="rag-canvas" class="rag-canvas"></canvas>
+    </div>
+
+    <!-- Routing paths -->
+    <div class="routing-section">
+      <div class="routing-paths" id="routing-paths">
+        <div class="route-item" data-route="rag">
+          <span class="route-dot"></span>
+          <span class="route-label">RAG Local</span>
+          <span class="route-line"></span>
+          <span class="route-lock">🔒</span>
+        </div>
+        <div class="route-item" data-route="local">
+          <span class="route-dot"></span>
+          <span class="route-label">LLM Local (MLX)</span>
+          <span class="route-line"></span>
+          <span class="route-lock">🔒</span>
+        </div>
+        <div class="route-item" data-route="cloud">
+          <span class="route-dot"></span>
+          <span class="route-label">Cloud API</span>
+          <span class="route-line"></span>
+          <span class="route-lock" id="cloud-lock">🔓</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Faits structurés en pastilles -->
+    <div class="facts-section">
+      <div class="facts-title">⟐ FAITS STRUCTURÉS</div>
+      <div class="facts-grid" id="facts-grid"></div>
+    </div>
+  </div>
+
+  <!-- ─── CONSOLE (pleine largeur) ─── -->
+  <div class="panel console-panel">
+    <div class="panel-title">⟐ CONSOLE / LOGS</div>
+    <div class="console-output" id="console"></div>
+  </div>
+
+  <!-- ─── CHAT INPUT ─── -->
+  <div class="panel chat-panel">
+    <div class="panel-title">⟐ CHAT</div>
+    <div class="chat-input-wrapper">
+      <input type="text" id="chat-input" placeholder="Message pour NURU…" autocomplete="off">
+    </div>
+    <button class="chat-send-btn" id="chat-send-btn">▶</button>
+    <button class="chat-cloud-btn" id="chat-cloud-btn" title="Basculer mode cloud">☁️</button>
+    <button class="chat-web-btn" id="chat-web-btn" title="Activer recherche web">🌐</button>
+  </div>
+
+</div>
+
+<script>
+// ═══════════════════════════════════════════════════════
+// ÉTAT GLOBAL
+// ═══════════════════════════════════════════════════════
+const state = {
+  ram_used: 0,
+  docs_count: 0,
+  current_state: 'idle',
+  cloudMode: false,
+  webMode: false,
+  logs: []
+};
+
+// ═══════════════════════════════════════════════════════
+// TYPEWRITER — affichage caractère par caractère
+// ═══════════════════════════════════════════════════════
+let typewriterTimer = null;
+let typewriterQueue = [];
+
+function typewriter(text, speed = 20) {
+  return new Promise((resolve) => {
+    const el = document.getElementById('stream-text');
+    // Clear previous content but keep cursor
+    const cursor = el.querySelector('.cursor-blink');
+    el.innerHTML = '';
+    if (cursor) el.appendChild(cursor);
+
+    let i = 0;
+    const chars = [...text];
+    const cursorEl = el.querySelector('.cursor-blink') || (() => {
+      const c = document.createElement('span');
+      c.className = 'cursor-blink';
+      return c;
+    })();
+
+    function writeChar() {
+      if (i >= chars.length) {
+        // Ensure cursor is at end
+        if (!el.querySelector('.cursor-blink')) {
+          el.appendChild(cursorEl);
+        }
+        resolve();
+        return;
+      }
+      // Remove cursor temporarily, add char, re-add cursor
+      const tmp = el.querySelector('.cursor-blink');
+      if (tmp) tmp.remove();
+
+      const charSpan = document.createElement('span');
+      charSpan.textContent = chars[i];
+      el.appendChild(charSpan);
+
+      el.appendChild(cursorEl);
+      el.scrollIntoView({ block: 'end', behavior: 'smooth' });
+      i++;
+      typewriterTimer = setTimeout(writeChar, speed);
+    }
+    writeChar();
+  });
+}
+
+function clearTypewriter() {
+  if (typewriterTimer) {
+    clearTimeout(typewriterTimer);
+    typewriterTimer = null;
+  }
+  typewriterQueue = [];
+  const el = document.getElementById('stream-text');
+  el.innerHTML = '<span class="cursor-blink"></span>';
+}
+
+function streamText(text, speed = 20) {
+  // If typewriter is running, queue the text
+  if (typewriterTimer) {
+    typewriterQueue.push(text);
+  } else {
+    clearTypewriter();
+    typewriter(text, speed).then(() => {
+      typewriterTimer = null;
+      // Process queue
+      if (typewriterQueue.length > 0) {
+        const next = typewriterQueue.shift();
+        streamText(next, speed);
+      }
+    });
+  }
+}
+
+// ═══════════════════════════════════════════════════════
+// CONSOLE — logs temps réel avec tags colorés
+// ═══════════════════════════════════════════════════════
+const TAG_COLORS = {
+  RAG:     '#00d4aa',
+  ROUTER:  '#7c3aed',
+  CACHE:   '#f59e0b',
+  PERF:    '#06b6d4',
+  STT:     '#ff3366',
+  TTS:     '#00b4ff',
+  CLOUD:   '#ffaa00',
+  CORRECT: '#ff6b35',
+  CHAT:    '#00d4aa',
+  SYSTEM:  'rgba(0,180,255,0.25)'
+};
+
+function addLog(tag, msg) {
+  const t = new Date().toLocaleTimeString('fr-FR', { hour12: false });
+  const line = document.createElement('div');
+  line.className = 'log-line';
+
+  const tagUpper = tag.toUpperCase();
+  const tagColor = TAG_COLORS[tagUpper] || 'rgba(0,180,255,0.25)';
+
+  line.innerHTML =
+    '<span class="time">[' + t + ']</span>' +
+    '<span class="tag tag-' + tagUpper + '">[' + tagUpper + ']</span> ' +
+    msg;
+
+  const el = document.getElementById('console');
+  el.appendChild(line);
+  el.scrollTop = el.scrollHeight;
+  state.logs.push({ tag: tagUpper, msg, time: t });
+  if (state.logs.length > 200) {
+    el.removeChild(el.firstChild);
+    state.logs.shift();
+  }
+}
+
+// ═══════════════════════════════════════════════════════
+// CHANGEMENT D'ÉTAT NURU
+// ═══════════════════════════════════════════════════════
+function setState(newState) {
+  const valid = ['idle', 'listen', 'think', 'speak'];
+  if (!valid.includes(newState)) return;
+  state.current_state = newState;
+
+  // Anneaux
+  document.querySelectorAll('.ring').forEach(r => {
+    r.className = 'ring';
+    if (newState !== 'idle') r.classList.add('state-' + newState);
+  });
+
+  // Dot
+  const dot = document.getElementById('state-dot');
+  dot.className = 'state-dot ' + newState;
+
+  // Texte
+  const labels = { idle: 'REPOS', listen: 'ÉCOUTE', think: 'RÉFLEXION', speak: 'PAROLE' };
+  document.getElementById('state-text').textContent = labels[newState] || 'REPOS';
+
+  // Routage
+  const routes = document.querySelectorAll('.route-item');
+  routes.forEach(r => r.classList.remove('active'));
+  if (newState === 'think' || newState === 'speak') {
+    routes[0].classList.add('active');
+    routes[1].classList.add('active');
+  }
+}
+
+// ═══════════════════════════════════════════════════════
+// RAG CANVAS ANIMATION
+// ═══════════════════════════════════════════════════════
+let ragCtx, ragNodes = [], ragAnim;
+
+function initRagCanvas() {
+  const canvas = document.getElementById('rag-canvas');
+  const parent = canvas.parentElement;
+  canvas.width = parent.clientWidth;
+  canvas.height = parent.clientHeight;
+  ragCtx = canvas.getContext('2d');
+
+  ragNodes = [];
+  const count = Math.max(Math.min(state.docs_count || 25, 50), 15);
+  for (let i = 0; i < count; i++) {
+    ragNodes.push({
+      x: Math.random() * canvas.width,
+      y: Math.random() * canvas.height,
+      r: 1.5 + Math.random() * 3,
+      vx: (Math.random() - 0.5) * 0.25,
+      vy: (Math.random() - 0.5) * 0.25,
+      hue: 190 + Math.random() * 40,
+      connections: []
+    });
+  }
+
+  // Connecter nœuds proches
+  ragNodes.forEach((a, i) => {
+    ragNodes.forEach((b, j) => {
+      if (i < j) {
+        const dx = a.x - b.x, dy = a.y - b.y;
+        if (Math.sqrt(dx*dx + dy*dy) < 90) a.connections.push(j);
+      }
+    });
+  });
+
+  cancelAnimationFrame(ragAnim);
+  animateRag();
+}
+
+function animateRag() {
+  if (!ragCtx) return;
+  const canvas = ragCtx.canvas;
+  ragCtx.clearRect(0, 0, canvas.width, canvas.height);
+
+  // Déplacer
+  ragNodes.forEach(n => {
+    n.x += n.vx;
+    n.y += n.vy;
+    if (n.x < 0 || n.x > canvas.width) n.vx *= -1;
+    if (n.y < 0 || n.y > canvas.height) n.vy *= -1;
+  });
+
+  // Connexions
+  ragNodes.forEach((a, i) => {
+    a.connections.forEach(j => {
+      const b = ragNodes[j];
+      if (!b) return;
+      const dx = a.x - b.x, dy = a.y - b.y;
+      const dist = Math.sqrt(dx*dx + dy*dy);
+      const alpha = Math.max(0, 1 - dist / 110) * 0.12;
+      ragCtx.beginPath();
+      ragCtx.moveTo(a.x, a.y);
+      ragCtx.lineTo(b.x, b.y);
+      ragCtx.strokeStyle = 'rgba(0, 200, 255, ' + alpha + ')';
+      ragCtx.lineWidth = 0.5;
+      ragCtx.stroke();
+    });
+  });
+
+  // Nœuds
+  ragNodes.forEach(n => {
+    const alpha = 0.15 + Math.random() * 0.25;
+    ragCtx.beginPath();
+    ragCtx.arc(n.x, n.y, n.r, 0, Math.PI * 2);
+    ragCtx.fillStyle = 'rgba(0, 200, 255, ' + alpha + ')';
+    ragCtx.fill();
+    // Glow
+    ragCtx.beginPath();
+    ragCtx.arc(n.x, n.y, n.r * 2.5, 0, Math.PI * 2);
+    ragCtx.fillStyle = 'rgba(0, 200, 255, 0.01)';
+    ragCtx.fill();
+  });
+
+  ragAnim = requestAnimationFrame(animateRag);
+}
+
+// ═══════════════════════════════════════════════════════
+// PARTICULES DE FOND
+// ═══════════════════════════════════════════════════════
+let pCtx, particles, pAnim;
+
+function initParticles() {
+  const canvas = document.getElementById('particles-canvas');
+  canvas.width = window.innerWidth;
+  canvas.height = window.innerHeight;
+  pCtx = canvas.getContext('2d');
+
+  particles = [];
+  for (let i = 0; i < 80; i++) {
+    particles.push({
+      x: Math.random() * canvas.width,
+      y: Math.random() * canvas.height,
+      vx: (Math.random() - 0.5) * 0.15,
+      vy: (Math.random() - 0.5) * 0.15,
+      r: 0.4 + Math.random() * 1.2,
+      opacity: 0.02 + Math.random() * 0.04
+    });
+  }
+  animateParticles();
+}
+
+function animateParticles() {
+  if (!pCtx) return;
+  pCtx.clearRect(0, 0, window.innerWidth, window.innerHeight);
+
+  particles.forEach(p => {
+    p.x += p.vx;
+    p.y += p.vy;
+    if (p.x < 0 || p.x > window.innerWidth) p.vx *= -1;
+    if (p.y < 0 || p.y > window.innerHeight) p.vy *= -1;
+    pCtx.beginPath();
+    pCtx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
+    pCtx.fillStyle = 'rgba(0, 180, 255, ' + p.opacity + ')';
+    pCtx.fill();
+  });
+
+  pAnim = requestAnimationFrame(animateParticles);
+}
+
+// ═══════════════════════════════════════════════════════
+// MISE À JOUR DU TABLEAU DE BORD
+// ═══════════════════════════════════════════════════════
+function updateDashboard(data) {
+  if (!data) return;
+
+  state.docs_count = data.documents || 0;
+
+  // RAM
+  const ramUsed = data.ram_used || state.ram_used;
+  state.ram_used = ramUsed;
+  const ramPercent = (ramUsed / 8) * 100;
+
+  document.getElementById('ram-fill').style.width = ramPercent + '%';
+  document.getElementById('ram-percent').textContent = Math.round(ramPercent) + '%';
+  document.getElementById('ram-value').innerHTML = ramUsed.toFixed(1) + ' <span>/ 8.0 Go</span>';
+
+  // Latence MLX
+  const latency = data.latency || 0;
+  const latPercent = Math.min(100, (latency / 200) * 100);
+  document.getElementById('latency-fill').style.width = latPercent + '%';
+  document.getElementById('latency-label').textContent = latency.toFixed(1) + ' ms';
+  document.getElementById('latency-value').innerHTML = latency.toFixed(1) + ' <span>ms</span>';
+
+  // Tokens/s
+  const tokens = data.tokens_per_sec || 0;
+  const tokPercent = Math.min(100, (tokens / 100) * 100);
+  document.getElementById('tokens-fill').style.width = tokPercent + '%';
+  document.getElementById('tokens-label').textContent = tokens.toFixed(1) + ' tok/s';
+  document.getElementById('tokens-value').innerHTML = tokens.toFixed(1) + ' <span>tok/s</span>';
+
+  // Cache hits
+  const cacheHit = data.cache_hit_ratio || 0;
+  document.getElementById('cache-fill').style.width = cacheHit + '%';
+  document.getElementById('cache-label').textContent = cacheHit.toFixed(1) + '%';
+  document.getElementById('cache-value').innerHTML = cacheHit.toFixed(1) + ' <span>% hits</span>';
+}
+
+function updateCacheStats(data) {
+  if (!data) return;
+  document.getElementById('cache-hits').textContent = data.hits || 0;
+  document.getElementById('cache-misses').textContent = data.misses || 0;
+  document.getElementById('cache-size').textContent = data.size || 0;
+}
+
+// ═══════════════════════════════════════════════════════
+// FAITS STRUCTURÉS
+// ═══════════════════════════════════════════════════════
+function updateFacts(facts) {
+  const grid = document.getElementById('facts-grid');
+  grid.innerHTML = '';
+  if (!facts || facts.length === 0) {
+    const empty = document.createElement('span');
+    empty.className = 'fact-pill';
+    empty.textContent = 'Aucun fait';
+    grid.appendChild(empty);
+    return;
+  }
+  facts.forEach(f => {
+    const pill = document.createElement('span');
+    pill.className = 'fact-pill';
+    if (f.source) pill.classList.add(f.source);
+    pill.textContent = f.text || f;
+    grid.appendChild(pill);
+  });
+}
+
+// ═══════════════════════════════════════════════════════
+// CHAT — POST /api/chat + streaming typewriter
+// ═══════════════════════════════════════════════════════
+async function sendChatMessage(message) {
+  if (!message || !message.trim()) return;
+
+  const input = document.getElementById('chat-input');
+  input.value = '';
+  input.disabled = true;
+
+  addLog('CHAT', '➤ ' + message);
+
+  // Désactiver le typewriter en cours
+  if (typewriterTimer) {
+    clearTimeout(typewriterTimer);
+    typewriterTimer = null;
+  }
+  typewriterQueue = [];
+
+  const streamEl = document.getElementById('stream-text');
+  streamEl.innerHTML = '<span class="cursor-blink"></span>';
+  
+  let fullResponse = "";
+  const cursor = streamEl.querySelector('.cursor-blink');
+
+  setState('think');
+
+  const params = new URLSearchParams({
+    q: message.trim(),
+    cloud: state.cloudMode,
+    web: state.webMode,
+    no_cache: state.webMode
+  });
+
+  const eventSource = new EventSource(`/api/chat/stream?${params.toString()}`);
+
+  eventSource.onmessage = (event) => {
+    const data = JSON.parse(event.data);
+
+    if (data.type === 'start') {
+      addLog('ROUTER', `Début du routage : ${data.level_name} (${data.reason})`);
+    } else if (data.type === 'status') {
+      addLog('SYSTEM', data.msg);
+    } else if (data.type === 'token') {
+      const token = data.token;
+      fullResponse += token;
+      
+      // Affichage immédiat sans typewriter pour le vrai streaming
+      const tokenSpan = document.createElement('span');
+      tokenSpan.textContent = token;
+      streamEl.insertBefore(tokenSpan, cursor);
+      streamEl.scrollIntoView({ block: 'end', behavior: 'smooth' });
+      
+      setState('speak');
+    } else if (data.type === 'end') {
+      addLog('PERF', `Terminé en ${data.latency_ms}ms via ${data.model_used}`);
+      if (data.sources && data.sources.length > 0) {
+        addLog('RAG', `Sources: ${data.sources.join(', ')}`);
+      }
+      eventSource.close();
+      input.disabled = false;
+      input.focus();
+      setState('idle');
+    } else if (data.type === 'error') {
+      addLog('SYSTEM', `⚠ Erreur: ${data.message}`);
+      const errSpan = document.createElement('span');
+      errSpan.style.color = '#ff4444';
+      errSpan.textContent = `\n⚠ Erreur: ${data.message}`;
+      streamEl.insertBefore(errSpan, cursor);
+      eventSource.close();
+      input.disabled = false;
+      input.focus();
+      setState('idle');
+    } else if (data.type === 'confirm') {
+      addLog('CLOUD', `Confirmation requise: ${data.reason}`);
+      // Si mode cloud déjà activé, on auto-confirme
+      if (state.cloudMode) {
+        addLog('CLOUD', 'Auto-confirmation (mode cloud forcé)…');
+        eventSource.close();
+        sendChatMessage(input.value || message);
+      } else {
+        eventSource.close();
+        input.disabled = false;
+        input.focus();
+        setState('idle');
+        addLog('CLOUD', 'ℹ Activez le mode ☁️ pour les requêtes complexes, ou attendez le mode local.');
+      }
+    }
+  };
+
+  eventSource.onerror = (err) => {
+    addLog('SYSTEM', '⚠ Erreur de connexion au flux.');
+    eventSource.close();
+    input.disabled = false;
+    input.focus();
+    setState('idle');
+  };
+}
+
+// ═══════════════════════════════════════════════════════
+// FETCH() PÉRIODIQUE
+// ═══════════════════════════════════════════════════════
+async function fetchPerf() {
+  try {
+    const res = await fetch('/api/perf');
+    const data = await res.json();
+    updateDashboard(data);
+  } catch (e) { /* silencieux */ }
+}
+
+async function fetchCache() {
+  try {
+    const res = await fetch('/api/cache');
+    const data = await res.json();
+    updateCacheStats(data);
+  } catch (e) { /* silencieux */ }
+}
+
+async function fetchFacts() {
+  try {
+    const res = await fetch('/api/facts');
+    const data = await res.json();
+    updateFacts(data);
+  } catch (e) { /* silencieux */ }
+}
+
+async function fetchStats() {
+  try {
+    const res = await fetch('/api/stats');
+    const data = await res.json();
+    if (data.state) setState(data.state);
+  } catch (e) { /* silencieux */ }
+}
+
+async function fetchTimeline() {
+  try {
+    const res = await fetch('/api/timeline');
+    const data = await res.json();
+    if (data && data.logs) {
+      data.logs.forEach(l => addLog(l.tag || 'SYSTEM', l.msg || l));
+    }
+  } catch (e) { /* silencieux */ }
+}
+
+function startPeriodicFetch() {
+  // /api/perf — toutes les 2s
+  fetchPerf();
+  setInterval(fetchPerf, 2000);
+
+  // /api/cache — toutes les 3s
+  fetchCache();
+  setInterval(fetchCache, 3000);
+
+  // /api/facts — toutes les 5s
+  fetchFacts();
+  setInterval(fetchFacts, 5000);
+
+  // /api/stats — toutes les 3s
+  fetchStats();
+  setInterval(fetchStats, 3000);
+
+  // /api/timeline — toutes les 4s
+  fetchTimeline();
+  setInterval(fetchTimeline, 4000);
+}
+
+// ═══════════════════════════════════════════════════════
+// INITIALISATION
+// ═══════════════════════════════════════════════════════
+window.addEventListener('load', () => {
+  initParticles();
+  startPeriodicFetch();
+  // Suppression de la simulation de console pour ne garder que les logs réels
+  setTimeout(initRagCanvas, 500);
+
+  // ── CÂBLAGE DES ÉVÉNEMENTS CHAT ──
+
+  const chatInput = document.getElementById('chat-input');
+  const sendBtn = document.getElementById('chat-send-btn');
+  const cloudBtn = document.getElementById('chat-cloud-btn');
+  const webBtn = document.getElementById('chat-web-btn');
+
+  // Envoi par clic sur bouton ▶
+  sendBtn.addEventListener('click', () => {
+    sendChatMessage(chatInput.value);
+  });
+
+  // Envoi par touche Enter
+  chatInput.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      sendChatMessage(chatInput.value);
+    }
+  });
+
+  // Bascule mode Cloud (☁️)
+  cloudBtn.addEventListener('click', () => {
+    state.cloudMode = !state.cloudMode;
+    cloudBtn.classList.toggle('active', state.cloudMode);
+    addLog('SYSTEM', `☁️ Mode cloud : ${state.cloudMode ? 'ON' : 'OFF'}`);
+  });
+
+  // Bascule recherche Web (🌐)
+  webBtn.addEventListener('click', () => {
+    state.webMode = !state.webMode;
+    webBtn.classList.toggle('active', state.webMode);
+    addLog('SYSTEM', `🌐 Recherche web : ${state.webMode ? 'ON' : 'OFF'}`);
+  });
+
+  // Message de bienvenue
+  setTimeout(() => {
+    addLog('SYSTEM', 'NURU v2.5 — Système prêt sur Apple Silicon.');
+    streamText('Bienvenue. Je suis NURU, votre assistant local. Comment puis-je vous aider ?', 18);
+  }, 800);
+});
+</script>
+</body>
+</html>

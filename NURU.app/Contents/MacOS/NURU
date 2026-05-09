@@ -1,0 +1,38 @@
+#!/bin/bash
+# NURU — macOS Native Launcher
+# Usage:
+#   NURU.app            → Launch daemon (menu bar)
+#   NURU.app --gui      → Launch GUI overlay only
+#   NURU.app --overlay  → Same as --gui
+
+NURU_DIR="$HOME/Downloads/Assistant IA"
+LOG_FILE="/tmp/nuru-daemon.log"
+PYTHON="$NURU_DIR/.venv/bin/python3"
+
+# Vérifier qu'on est dans le bon dossier
+if [ ! -d "$NURU_DIR/src" ]; then
+    echo "[$(date)] ❌ NURU introuvable dans $NURU_DIR" >> "$LOG_FILE"
+    exit 1
+fi
+
+# Auto-install deps si manquantes
+if ! "$PYTHON" -c "import yaml, PySide6, rumps" 2>/dev/null; then
+    echo "[$(date)] 📦 Installation des dépendances..." >> "$LOG_FILE"
+    "$PYTHON" -m pip install -r "$NURU_DIR/requirements.txt" >> "$LOG_FILE" 2>&1
+fi
+
+case "$1" in
+    --gui|--overlay)
+        # GUI overlay V2 (mode par défaut)
+        exec "$PYTHON" "$NURU_DIR/src/nuru_overlay.py" >> "$LOG_FILE" 2>&1
+        ;;
+    --gui-v1|--overlay-v1)
+        # GUI overlay V1 (fallback)
+        exec "$PYTHON" "$NURU_DIR/src/nuru_overlay.py" --v1 >> "$LOG_FILE" 2>&1
+        ;;
+    *)
+        # Daemon mode (barre de menus)
+        echo "[$(date)] 🚀 NURU daemon starting..." >> "$LOG_FILE"
+        exec "$PYTHON" "$NURU_DIR/src/nuru_daemon.py" --menubar >> "$LOG_FILE" 2>&1
+        ;;
+esac
