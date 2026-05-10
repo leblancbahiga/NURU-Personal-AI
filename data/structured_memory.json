@@ -1,23 +1,23 @@
 {
   "nom": {
     "value": "Leblanc BAHIGA Mudarhi",
-    "confidence": 0.95,
-    "timestamp": 1778327068.98988,
-    "updated": "2026-05-09 14:44:28",
+    "confidence": 1.0,
+    "timestamp": 1778405365.1696231,
+    "updated": "2026-05-10 12:29:25",
     "status": "active"
   },
   "prenom": {
     "value": "Leblanc",
-    "confidence": 0.95,
-    "timestamp": 1778327068.9901319,
-    "updated": "2026-05-09 14:44:28",
+    "confidence": 1.0,
+    "timestamp": 1778405365.169763,
+    "updated": "2026-05-10 12:29:25",
     "status": "active"
   },
   "profession": {
     "value": "Ingénieur agronome & informaticien",
-    "confidence": 0.95,
-    "timestamp": 1778327068.990301,
-    "updated": "2026-05-09 14:44:28",
+    "confidence": 1.0,
+    "timestamp": 1778405365.16821,
+    "updated": "2026-05-10 12:29:25",
     "status": "active"
   },
   "lieu": {
@@ -32,6 +32,34 @@
     "confidence": 0.95,
     "timestamp": 1778327068.9905741,
     "updated": "2026-05-09 14:44:28",
+    "status": "active"
+  },
+  "experience": {
+    "value": "Plus de 15 ans d'expérience en développement agricole durable, gestion de projets IITA/USAID, analyse de vulnérabilité climatique et recherche participative en RDC.",
+    "confidence": 0.9,
+    "timestamp": 1778405365.168767,
+    "updated": "2026-05-10 12:29:25",
+    "status": "active"
+  },
+  "dernier_projet": {
+    "value": "Création du système d'assistant IA personnel NURU (modèle local Qwen 2.5-3B-4bit sur Apple Silicon, pipeline RAG propriétaire, déploiement natif menu-bar).",
+    "confidence": 0.95,
+    "timestamp": 1778405365.169076,
+    "updated": "2026-05-10 12:29:25",
+    "status": "active"
+  },
+  "localisation": {
+    "value": "Basé à Kinshasa, RDC.",
+    "confidence": 0.95,
+    "timestamp": 1778405365.169312,
+    "updated": "2026-05-10 12:29:25",
+    "status": "active"
+  },
+  "competences": {
+    "value": "Python, MLX/LLM, modèles embeddings, ChromaDB, PySide6, gestion de projets agricoles.",
+    "confidence": 0.9,
+    "timestamp": 1778405365.1694589,
+    "updated": "2026-05-10 12:29:25",
     "status": "active"
   }
 }

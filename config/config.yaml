@@ -48,7 +48,7 @@ audio:
 rag:
   chunk_size: 512
   chunk_overlap: 64
-  similarity_threshold: 0.50               # Seuil de similarité cosinus (0-1)
+  similarity_threshold: 0.20               # Seuil de similarité cosinus (0-1)
   chroma_db_path: "data/chroma_db"
   reranker: false                          # 🔧 Re-ranker (Cross-Encoder) — désactivé par défaut (gain ~45s)
   hyde: false                              # 🔧 HyDE (Hypothetical Document Embeddings) — désactivé par défaut (gain ~15s)
@@ -59,7 +59,7 @@ rag:
     enabled: true
     simple:
       max_tokens: 256
-      rag_chunks: 0
+      rag_chunks: 2
       memory_tokens: 100
     medium:
       max_tokens: 1024
@@ -89,6 +89,7 @@ indexing:
   auto_scan_on_startup: true         # Scanner au démarrage du daemon
   scan_roots:
     - "~"                            # Scanner tout le home directory
+    - "/Users/leblancbahiga/Library/Mobile Documents/com~apple~CloudDocs"  # iCloud Drive
   exclude_dirs:
     - ".git"
     - "node_modules"

@@ -1,0 +1,26 @@
+[
+  {
+    "timestamp": 1778401127.183591,
+    "timestamp_iso": "2026-05-10T11:18:47",
+    "query": "Quel est mon parcours professionnel ?",
+    "query_length": 37,
+    "level": 1,
+    "level_name": "Inconnu",
+    "reason": "Documents pertinents trouvés (RAG Score: 0.66)",
+    "latency_ms": 9853.6,
+    "model_used": "mlx-community/Qwen2.5-3B-Instruct-4bit",
+    "extra": {}
+  },
+  {
+    "timestamp": 1778403161.0133681,
+    "timestamp_iso": "2026-05-10T11:52:41",
+    "query": "Quel est mon parcours professionnel ?",
+    "query_length": 37,
+    "level": 2,
+    "level_name": "Inconnu",
+    "reason": "Score 0.43 zone médiane → Niveau 2 (Général)",
+    "latency_ms": 13023.8,
+    "model_used": "mlx-community/Qwen2.5-3B-Instruct-4bit",
+    "extra": {}
+  }
+]

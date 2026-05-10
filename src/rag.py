@@ -294,7 +294,7 @@ class VectorStore:
 
     # ── Recherche ──
 
-    def search(self, query: str, hyde_doc: str = None, k: int = 5, threshold: float = 0.50,
+    def search(self, query: str, hyde_doc: str = None, k: int = 5, threshold: float = 0.20,
                include_corrections: bool = True) -> list[dict]:
         """
         Recherche hybride dans ChromaDB (Bug #7: threshold augmenté).
@@ -372,7 +372,7 @@ class VectorStore:
             created_at = r["metadata"].get("created_at", time.time())
             recency = _compute_recency_weight(created_at)
 
-            hybrid = 0.6 * embedding_sim + 0.2 * kw_match + 0.2 * recency
+            hybrid = 0.4 * embedding_sim + 0.4 * kw_match + 0.2 * recency
             r["score"] = round(hybrid, 4)
             r["hybrid_components"] = {
                 "embedding": round(embedding_sim, 4),

@@ -151,6 +151,7 @@ KEYWORDS_ACTION = [
 KEYWORDS_USER_IDENTITY = [
     "qui suis-je", "who am i", "leblanc bahiga", "who is leblanc",
     "qui est leblanc", "c'est qui leblanc",
+    "parcours professionnel", "expérience professionnelle", "mon travail", "mon cv", "quel est mon poste", "quelle est ma profession",
 ]
 # Qui es-tu / who are you → à propos de NURU
 KEYWORDS_NURU_IDENTITY = [
@@ -248,7 +249,7 @@ class ComplexityClassifier:
         w_structure: float = 0.15,
         threshold_n1: float = 0.36,
         threshold_n3: float = 0.55,
-        rag_threshold: float = 0.50,
+        rag_threshold: float = 0.30,
     ):
         total = w_rag + w_keywords + w_length + w_structure
         assert abs(total - 1.0) < 1e-6, f"Les poids doivent sommer à 1.0 (total={total})"
