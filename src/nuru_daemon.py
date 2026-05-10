@@ -36,6 +36,15 @@ from router import Router
 from memory import SessionMemory
 
 try:
+    from indexer_daemon import IndexerDaemon
+    INDEXER_AVAILABLE = True
+except ImportError:
+    IndexerDaemon = None
+    INDEXER_AVAILABLE = False
+    logger = logging.getLogger("nuru.daemon")
+    logger.warning("indexer_daemon non disponible — indexation automatique désactivée")
+
+try:
     import rumps
 except ImportError:
     rumps = None
@@ -97,12 +106,37 @@ class NuruDaemon:
         self.total_interactions = 0
         self.total_errors = 0
 
+        # Initialisation de l'indexeur si disponible
+        self.indexer: Optional[IndexerDaemon] = None
+        if INDEXER_AVAILABLE and IndexerDaemon is not None:
+            try:
+                self.indexer = IndexerDaemon(self.config)
+                indexing_cfg = self.config.get("indexing", {})
+                if indexing_cfg.get("enabled", True):
+                    print("📂 Indexeur NURU initialisé (démarrage auto si activé)")
+                    # Scan automatique au démarrage si configuré
+                    if indexing_cfg.get("auto_scan_on_startup", True):
+                        print("🔍 Lancement d'un scan automatique au démarrage...")
+                        # On lance ça en thread pour ne pas bloquer le daemon
+                        threading.Thread(target=self._auto_scan_startup, daemon=True).start()
+            except Exception as e:
+                logger.warning(f"Échec initialisation indexeur : {e}")
+
         # Chargement de la config audio
         self._tts_rate = self.config.get("audio", {}).get("tts_speed", 200)
         self._stt_model = self.config.get("audio", {}).get("stt_model", "tiny")
         self._language = "fr"
 
         print(f"🟢 NURU Daemon prêt — mode {self.state.value}")
+
+    def _auto_scan_startup(self):
+        """Lance un scan automatique au démarrage (thread dédié)."""
+        if self.indexer is None:
+            return
+        try:
+            self.indexer.scan_once()
+        except Exception as e:
+            logger.warning(f"Échec scan auto démarrage : {e}")
 
     def _load_config(self, config_path: Optional[str]) -> dict:
         if yaml is None or config_path is None:
@@ -365,7 +399,8 @@ class NuruDaemon:
         """Mode CLI simple pour le daemon."""
         print(f"\n{'='*50}")
         print("🟡 NURU Daemon — mode CLI")
-        print("Commandes : 'ecoute' / 'parle [texte]' / 'quit'")
+        print("Commandes : 'écoute' / 'parle [texte]' / 'quit'")
+        print("            '/index status' | '/index scan' | '/index clear'")
         print(f"{'='*50}\n")
 
         self.router = Router(
@@ -381,6 +416,28 @@ class NuruDaemon:
 
             if not cmd:
                 continue
+            
+            # Commandes indexeur
+            if cmd.startswith("/index"):
+                if self.indexer is None:
+                    print("⚠ Indexeur non disponible")
+                else:
+                    parts = cmd.split()
+                    subcmd = parts[1] if len(parts) > 1 else "status"
+                    if subcmd == "status":
+                        print(self.indexer.get_status())
+                    elif subcmd == "scan":
+                        print("🔍 Scan en cours...")
+                        self.indexer.scan_once()
+                        print(self.indexer.get_status())
+                    elif subcmd == "clear":
+                        print("🧹 Vidage de l'index...")
+                        self.indexer.clear_index()
+                        print(self.indexer.get_status())
+                    else:
+                        print("Commandes : /index status | /index scan | /index clear")
+                continue
+
             if cmd.lower() == "quit":
                 break
             if cmd.lower() == "ecoute":

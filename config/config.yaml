@@ -75,8 +75,46 @@ rag:
     - "~/Documents"
     - "~/Google Drive"
 
-  # Extensions supportées
+  # Extensions supportées (héritées par indexing.extensions si vide)
   extensions:
+    - ".pdf"
+    - ".docx"
+    - ".txt"
+    - ".md"
+    - ".csv"
+
+# --- Indexation automatique des fichiers ---
+indexing:
+  enabled: true                      # Activer/désactiver le scan automatique
+  auto_scan_on_startup: true         # Scanner au démarrage du daemon
+  scan_roots:
+    - "~"                            # Scanner tout le home directory
+  exclude_dirs:
+    - ".git"
+    - "node_modules"
+    - ".venv"
+    - "venv"
+    - "env"
+    - "__pycache__"
+    - ".mypy_cache"
+    - ".pytest_cache"
+    - ".Trash"
+    - "Library"
+    - "Caches"
+    - ".cache"
+    - ".nuru"
+    - ".hermes"
+    - ".copilot"
+    - ".vscode"
+    - ".idea"
+    - "Google/Chrome"
+    - "Google/Chrome Canary"
+  exclude_hidden: true               # Ignorer les fichiers/dossiers cachés
+  interval_minutes: 30               # Scan automatique toutes les 30 min
+  max_file_size_mb: 50               # Ignorer les fichiers > 50 Mo
+  override_battery_check: false      # Forcer l'indexation même si batterie < 20%
+  retry_on_low_battery: true         # Réessayer au cycle suivant si batterie faible
+  extensions:                        # Formats à indexer (vide = hériter de rag.extensions)
     - ".pdf"
     - ".docx"
     - ".txt"
